@@ -1,0 +1,6 @@
+{
+  "店铺名称": "data.shop_name",
+  "执行结果": "data.status_name",
+  "执行时间": "data.execute_time",
+  "运行时长": "__derived__.run_time -> format_duration"
+}
