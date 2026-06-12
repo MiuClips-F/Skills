@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "task_name": "platform_report_collection",
+  "started_at": "2026-06-12T00:00:00+08:00",
+  "updated_at": "2026-06-12T00:00:00+08:00",
+  "summary": {
+    "total": 0,
+    "success": 0,
+    "skipped_success": 0,
+    "failed": 0,
+    "running": 0,
+    "partial": 0,
+    "blocked": 0
+  },
+  "tasks": {
+    "platform:shop:report:2026-06-01_2026-06-12": {
+      "task_key": "platform:shop:report:2026-06-01_2026-06-12",
+      "input_hash": "sha256-of-normalized-input",
+      "status": "success",
+      "retryable": false,
+      "started_at": "2026-06-12T00:00:00+08:00",
+      "finished_at": "2026-06-12T00:00:00+08:00",
+      "row_count": 0,
+      "output_paths": [
+        "output/platform_shop_report_20260612.csv"
+      ],
+      "validation": {
+        "record_count_checked": true,
+        "sample_rows_checked": true,
+        "file_checked": true
+      },
+      "error": null
+    },
+    "platform:shop:another_report:2026-06-01_2026-06-12": {
+      "task_key": "platform:shop:another_report:2026-06-01_2026-06-12",
+      "input_hash": "sha256-of-normalized-input",
+      "status": "failed",
+      "retryable": true,
+      "started_at": "2026-06-12T00:00:00+08:00",
+      "finished_at": "2026-06-12T00:00:00+08:00",
+      "row_count": 0,
+      "output_paths": [],
+      "validation": {},
+      "error": {
+        "type": "RetryableRequestError",
+        "message": "temporary http error",
+        "method": "POST",
+        "url": "https://example.com/api/report",
+        "http_status": 503,
+        "business_code": null,
+        "business_message": null,
+        "params_summary": {
+          "shop_name": "shop",
+          "report_name": "another_report",
+          "start_date": "2026-06-01",
+          "end_date": "2026-06-12"
+        }
+      }
+    }
+  }
+}

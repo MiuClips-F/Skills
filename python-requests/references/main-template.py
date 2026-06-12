@@ -2,6 +2,7 @@ from datetime import datetime
 from pathlib import Path
 import csv
 import json
+import time
 
 import requests
 
@@ -11,6 +12,7 @@ BASE_HEADERS = {
     "User-Agent": "Mozilla/5.0",
     "Accept": "application/json",
 }
+TRANSIENT_STATUS_CODES = {408, 429, 500, 502, 503, 504}
 
 
 class PlatformSectionFunctionExporter:
@@ -34,19 +36,33 @@ class PlatformSectionFunctionExporter:
         records = []
         page = 1
         while True:
-            response = self.session.post(
-                f"{BASE_URL}/api/example",
-                json={
-                    "shopName": shop_name,
-                    "startDate": start_date,
-                    "endDate": end_date,
-                    "page": page,
-                    "size": page_size,
-                },
-                timeout=30,
-            )
-            response.raise_for_status()
-            payload = response.json()
+            last_error = None
+            for attempt in range(1, 4):
+                try:
+                    response = self.session.post(
+                        f"{BASE_URL}/api/example",
+                        json={
+                            "shopName": shop_name,
+                            "startDate": start_date,
+                            "endDate": end_date,
+                            "page": page,
+                            "size": page_size,
+                        },
+                        timeout=30,
+                    )
+                    if response.status_code in TRANSIENT_STATUS_CODES:
+                        last_error = RuntimeError(f"temporary http error: {response.status_code}")
+                        time.sleep(attempt * 2)
+                        continue
+                    response.raise_for_status()
+                    payload = response.json()
+                    break
+                except (requests.Timeout, requests.ConnectionError) as exc:
+                    last_error = exc
+                    time.sleep(attempt * 2)
+            else:
+                raise RuntimeError(f"request failed after retries: {last_error}")
+
             if payload.get("success") is not True:
                 raise RuntimeError(payload)
             current = payload.get("data", {}).get("records", [])
