@@ -22,7 +22,7 @@
       "finished_at": "2026-06-12T00:00:00+08:00",
       "row_count": 0,
       "output_paths": [
-        "output/platform_shop_report_20260612.csv"
+        "D:/exports/20260612000000-示例报表.csv"
       ],
       "validation": {
         "record_count_checked": true,

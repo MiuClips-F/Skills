@@ -82,10 +82,13 @@ class PlatformSectionFunctionExporter:
             page += 1
         return records
 
-    # 把响应记录转换成页面展示行，无外部访问网址。
-    def build_row(self, record):
+    # 把响应记录和运行上下文转换成页面展示行，无外部访问网址。
+    def build_row(self, record, context):
         row = {}
         for header, source in self.field_mapping.items():
+            if source.startswith("__context__."):
+                row[header] = context.get(source.replace("__context__.", "", 1), "")
+                continue
             if source.startswith("__derived__."):
                 row[header] = ""
                 continue
@@ -113,14 +116,16 @@ class PlatformSectionFunctionExporter:
         )
 
     # 操作步骤：- 打开示例报表页面；- 选择店铺和日期范围；- 点击查询生成报表列表；- 保存页面列表结果。访问网址：https://example.com/report/page。
-    def run(self, shop_name, start_date, end_date, page_size, csv_path, mapping_output_path):
+    def run(self, report_context, start_date, end_date, page_size, csv_path, mapping_output_path):
         records = self.fetch_records(
-            shop_name=shop_name,
+            shop_name=report_context.get("shop_name", ""),
             start_date=start_date,
             end_date=end_date,
             page_size=page_size,
         )
-        rows = [self.build_row(record) for record in records]
+        context = dict(report_context)
+        context.setdefault("data_date", f"{start_date}~{end_date}")
+        rows = [self.build_row(record, context) for record in records]
         self.write_outputs(
             rows=rows,
             csv_path=csv_path,
@@ -133,21 +138,33 @@ if __name__ == "__main__":
     cookie = "当前测试 cookie 字符串"
     shop_id = "当前店铺ID"
     shop_name = "当前抓包店铺"
-    business_function_name = "示例报表"
+    business_export_table_name = "示例报表"
     start_date = "2026-05-01"
     end_date = "2026-05-22"
+    report_context = {
+        "data_date": f"{start_date}~{end_date}",
+        "shop_id": shop_id,
+        "shop_name": shop_name,
+        "product_id": "当前商品ID",
+        "sku": "当前SKU",
+        "product_name": "当前商品名称",
+        "live_room_name": "当前直播间名称",
+        "live_session_id": "当前直播场次ID",
+        "account_name": "当前账户名",
+        "account_id": "当前账户ID",
+    }
     page_size = 100
     field_mapping_path = Path(__file__).with_name("field_mapping.json")
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    file_stem = f"{shop_name}_{timestamp}_{business_function_name}"
-    csv_path = Path(__file__).resolve().parent / "output" / shop_id / f"{file_stem}.csv"
+    data_fetch_time = datetime.now().strftime("%Y%m%d%H%M%S")
+    file_stem = f"{data_fetch_time}-{business_export_table_name}"
+    csv_path = Path(r"D:\exports") / f"{file_stem}.csv"
     mapping_output_path = csv_path.with_name(f"{file_stem}_field_mapping.json")
     exporter = PlatformSectionFunctionExporter(
         cookie=cookie,
         field_mapping_path=field_mapping_path,
     )
     exporter.run(
-        shop_name=shop_name,
+        report_context=report_context,
         start_date=start_date,
         end_date=end_date,
         page_size=page_size,
