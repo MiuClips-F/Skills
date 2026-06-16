@@ -15,7 +15,7 @@ BASE_HEADERS = {
 TRANSIENT_STATUS_CODES = {408, 429, 500, 502, 503, 504}
 
 
-# 操作步骤：步骤1：初始化同一登录上下文的会话；步骤2：读取页面字段映射。访问网址：https://example.com。
+# 操作步骤：- 打开示例报表页面；- 确认已登录并进入目标报表。访问网址：https://example.com/report/page。
 class PlatformSectionFunctionExporter:
     # 初始化会话和字段映射，无外部访问网址。
     def __init__(self, cookie, field_mapping_path):
@@ -32,7 +32,7 @@ class PlatformSectionFunctionExporter:
         self.session.headers.clear()
         self.session.headers.update(headers)
 
-    # 操作步骤：步骤1：按店铺和日期组装分页参数；步骤2：请求报表接口；步骤3：累加分页记录。访问网址：https://example.com/api/example。
+    # 操作步骤：- 打开示例报表页面；- 选择店铺和日期范围；- 点击查询或翻页触发列表请求。访问网址：https://example.com/report/page。
     def fetch_records(self, shop_name, start_date, end_date, page_size):
         """
         参数：shop_name 对应店铺名称，str，必填，来源为当前抓包店铺；start_date 对应统计开始日期，str，必填，格式 YYYY-MM-DD；end_date 对应统计结束日期，str，必填，格式 YYYY-MM-DD；page_size 对应每页数量，int，必填，来源为页面分页大小。
@@ -112,7 +112,7 @@ class PlatformSectionFunctionExporter:
             encoding="utf-8",
         )
 
-    # 操作步骤：步骤1：抓取报表记录；步骤2：转换页面展示行；步骤3：写出 CSV 和字段映射。访问网址：https://example.com/api/example。
+    # 操作步骤：- 打开示例报表页面；- 选择店铺和日期范围；- 点击查询生成报表列表；- 保存页面列表结果。访问网址：https://example.com/report/page。
     def run(self, shop_name, start_date, end_date, page_size, csv_path, mapping_output_path):
         records = self.fetch_records(
             shop_name=shop_name,
