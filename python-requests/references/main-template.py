@@ -82,12 +82,12 @@ class PlatformSectionFunctionExporter:
             page += 1
         return records
 
-    # 把响应记录和运行上下文转换成页面展示行，无外部访问网址。
-    def build_row(self, record, context):
+    # 把响应记录转换成页面展示行，无外部访问网址。
+    def build_row(self, record, row_context):
         row = {}
         for header, source in self.field_mapping.items():
-            if source.startswith("__context__."):
-                row[header] = context.get(source.replace("__context__.", "", 1), "")
+            if source.startswith("__meta__."):
+                row[header] = row_context.get(source.split(".", 1)[1], "")
                 continue
             if source.startswith("__derived__."):
                 row[header] = ""
@@ -116,16 +116,21 @@ class PlatformSectionFunctionExporter:
         )
 
     # 操作步骤：- 打开示例报表页面；- 选择店铺和日期范围；- 点击查询生成报表列表；- 保存页面列表结果。访问网址：https://example.com/report/page。
-    def run(self, report_context, start_date, end_date, page_size, csv_path, mapping_output_path):
+    def run(self, shop_id, shop_name, business_date, data_capture_time, output_filename, start_date, end_date, page_size, csv_path, mapping_output_path):
         records = self.fetch_records(
-            shop_name=report_context.get("shop_name", ""),
+            shop_name=shop_name,
             start_date=start_date,
             end_date=end_date,
             page_size=page_size,
         )
-        context = dict(report_context)
-        context.setdefault("data_date", f"{start_date}~{end_date}")
-        rows = [self.build_row(record, context) for record in records]
+        row_context = {
+            "data_capture_time": data_capture_time,
+            "business_date": business_date,
+            "shop_id": shop_id,
+            "shop_name": shop_name,
+            "output_filename": output_filename,
+        }
+        rows = [self.build_row(record, row_context) for record in records]
         self.write_outputs(
             rows=rows,
             csv_path=csv_path,
@@ -138,33 +143,26 @@ if __name__ == "__main__":
     cookie = "当前测试 cookie 字符串"
     shop_id = "当前店铺ID"
     shop_name = "当前抓包店铺"
-    business_export_table_name = "示例报表"
+    business_date = "20260615"
+    export_table_name = "已购客核心指标"
     start_date = "2026-05-01"
     end_date = "2026-05-22"
-    report_context = {
-        "data_date": f"{start_date}~{end_date}",
-        "shop_id": shop_id,
-        "shop_name": shop_name,
-        "product_id": "当前商品ID",
-        "sku": "当前SKU",
-        "product_name": "当前商品名称",
-        "live_room_name": "当前直播间名称",
-        "live_session_id": "当前直播场次ID",
-        "account_name": "当前账户名",
-        "account_id": "当前账户ID",
-    }
     page_size = 100
     field_mapping_path = Path(__file__).with_name("field_mapping.json")
-    data_fetch_time = datetime.now().strftime("%Y%m%d%H%M%S")
-    file_stem = f"{data_fetch_time}-{business_export_table_name}"
-    csv_path = Path(r"D:\exports") / f"{file_stem}.csv"
-    mapping_output_path = csv_path.with_name(f"{file_stem}_field_mapping.json")
+    data_capture_time = datetime.now().strftime("%Y%m%d%H%M%S")
+    output_filename = f"{data_capture_time}-{business_date}-{export_table_name}.csv"
+    csv_path = Path(__file__).resolve().parent / "output" / output_filename
+    mapping_output_path = csv_path.with_name(f"{csv_path.stem}_field_mapping.json")
     exporter = PlatformSectionFunctionExporter(
         cookie=cookie,
         field_mapping_path=field_mapping_path,
     )
     exporter.run(
-        report_context=report_context,
+        shop_name=shop_name,
+        shop_id=shop_id,
+        business_date=business_date,
+        data_capture_time=data_capture_time,
+        output_filename=output_filename,
         start_date=start_date,
         end_date=end_date,
         page_size=page_size,
