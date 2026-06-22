@@ -139,7 +139,7 @@ class PlatformSectionFunctionExporter:
 
 
 if __name__ == "__main__":
-    # __main__ 只保留实际运行参数，不包含抓包阶段使用的 CDP/9222 参数。
+    # __main__ 只保留实际运行参数，不包含抓包阶段参数。
     cookie = "当前测试 cookie 字符串"
     shop_id = "当前店铺ID"
     shop_name = "当前抓包店铺"
