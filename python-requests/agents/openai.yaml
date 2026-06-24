@@ -1,27 +1,22 @@
 interface:
   display_name: "Python Requests"
-  short_description: "前期优先用 chrome-devtools-mcp 接管已打开 Chrome，必要时再下移 CDP，最终生成简洁 requests 脚本"
+  short_description: "抓取已登录浏览器真实请求链，并生成按 Ponytail 收敛的简洁 requests 脚本"
   default_prompt: |
-    使用 $python-requests 严格执行，若本提示与 SKILL.md 冲突，以 SKILL.md 为准。
+    使用 $python-requests 严格执行；若本提示与 SKILL.md 冲突，以 SKILL.md 为准。
 
     目标：
-    - 围绕用户描述的真实页面操作抓包
-    - 还原认证链、分页链、导出链
-    - 生成结构直接、按 Ponytail 收敛、且不依赖 CDP/MCP 的 Python requests 脚本
-    - 如有导出表格，按页面显示表头落表，并额外生成 field_mapping.json
+    - 围绕用户描述的真实页面操作抓包。
+    - 还原认证链、分页链、导出链、下载链。
+    - 生成结构直接、不依赖 CDP/MCP、按 Ponytail 收敛的 Python requests 脚本。
 
     硬约束：
-    1. 分析阶段优先用 chrome-devtools-mcp 接管现有 Chrome 标签页；只有 MCP 路径失败或请求元数据不足时，才检查 `127.0.0.1:9222`、`/json` 或 `/json/version` 并下移到直接 CDP，禁止新开浏览器。
-    2. 最终交付脚本禁止包含 `cdp_debug_url`、`webSocketDebuggerUrl`、`127.0.0.1:9222`、`/json`、`/json/version` 或其他 CDP/MCP 接管逻辑。
-    3. 禁止通过 Runtime.evaluate、JS 注入、localStorage、sessionStorage、document.cookie、页面全局变量或直接调用前端函数，提取现成 access_token、cookie、签名结果作为最终方案。
+    1. 复用当前已登录页面时，优先用 chrome-devtools-mcp 附着现有 Chrome 标签页；MCP 只看到受管 about:blank、空白页、独立会话或元数据不足时，才下移到直接 CDP；仍失败则停止，禁止新开浏览器。
+    2. 最终脚本禁止包含 `cdp_debug_url`、`webSocketDebuggerUrl`、`127.0.0.1:9222`、`/json`、`/json/version` 或其他 CDP/MCP 接管逻辑。
+    3. 禁止通过 Runtime.evaluate、JS 注入、localStorage、sessionStorage、document.cookie、页面全局变量或前端函数调用，提取现成 token、cookie、签名结果作为最终方案。
     4. cookie 默认由用户以字符串形式传入，不自动从浏览器读取。
-    5. 认证优先级固定为：还原登录、刷新、换票、前置 credential、签名链 -> 纳入前置接口返回 -> 用户传入 -> 用户明确允许时再用环境变量。
-    6. 主脚本默认命名为英文 `snake_case`，例如 `platform_section_function.py`，不要生成 `main.py`；如果生成目录，目录名也使用英文 `snake_case`。
-    7. 导出脚本运行时应直接读取独立的 `field_mapping.json`，不要在 `.py` 中重复维护同一份映射常量。
-    8. 生成代码必须至少包含 1 个明确的业务 class，默认控制为 1 个 class 和少量主要方法；强制按 Ponytail 规范生成，不新增未请求的抽象、配置层、通用框架或只调用一次的 helper/client/service/factory。
-    9. 每个函数和每个方法上方都要有一句简短注释，说明职责。
-    10. `self.xxx` 只保存跨多个方法复用的长期状态；某次调用才使用的值，直接作为方法参数或局部变量传递。
-    11. `csv_path`、`mapping_output_path`、`json_path` 这类一次性输出参数默认不要挂到 `self`，而是传给 `run()`、`write_outputs()` 或对应方法。
-    12. 请求头默认写成常量，类内封装一个 `update_headers()` 或同类方法统一更新会话头。
-    13. `if __name__ == "__main__"` 中集中传入 cookie、token、数据抓取时间、业务日期、业务导出表名称、字段映射路径、输出文件名等实际运行参数，不要传入 CDP 端口或页面接管参数。
-    14. 生成表格文件名按 `数据抓取时间-业务日期-业务导出表名称` 命名；店铺、商品、直播、账户、文件名等关键字段写入文件内容，非系统自生成文件统一使用 UTF-8。
+    5. 主脚本默认英文 `snake_case` 命名，不生成 `main.py`。
+    6. 表格导出才生成并读取独立 `field_mapping.json`；原始下载类请求不生成字段映射。
+    7. Ponytail 门禁：默认 1 个业务 class，2 到 4 个主要方法；不生成 helper/client/service/factory、多 utils、通用框架、配置层或未来预留文件。
+    8. `self.xxx` 只保存 session、字段映射、稳定配置等长期状态；输出路径、筛选条件、分页值、payload 参数作为方法参数或局部变量。
+    9. `if __name__ == "__main__"` 集中传入 cookie、token、店铺、日期、分页、输出路径等业务运行参数，不传 CDP/页面接管参数。
+    10. 交付前优先运行 `scripts/validate_generated_script.py` 检查最终脚本。

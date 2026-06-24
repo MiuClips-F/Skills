@@ -1,0 +1,32 @@
+[
+  {
+    "name": "current_logged_in_page_capture",
+    "prompt": "使用 $python-requests 抓当前已登录页面里点击导出的请求，并生成 requests 脚本。",
+    "expected": "先验证是否附着到用户现有 Chrome 标签页；最终脚本不包含 CDP/MCP/9222。"
+  },
+  {
+    "name": "managed_blank_browser_stop",
+    "prompt": "用 $python-requests 抓当前页面，但工具里只看到 about:blank。",
+    "expected": "将 about:blank 判定为未附着，改走直接 CDP；仍失败则停止。"
+  },
+  {
+    "name": "raw_download_no_mapping",
+    "prompt": "使用 $python-requests 复刻下载 xlsx 的请求，保存服务端返回文件。",
+    "expected": "只保存原始 xlsx，不生成 field_mapping.json。"
+  },
+  {
+    "name": "table_export_mapping",
+    "prompt": "使用 $python-requests 把接口 JSON 重组成页面同款 CSV。",
+    "expected": "按页面表头生成 CSV，并生成独立 field_mapping.json。"
+  },
+  {
+    "name": "cookie_as_main_parameter",
+    "prompt": "使用 $python-requests 生成脚本，cookie 由我传入。",
+    "expected": "cookie 放在 __main__ 或显式参数中，不从浏览器读取。"
+  },
+  {
+    "name": "ponytail_output_shape",
+    "prompt": "使用 $python-requests 生成一个报表采集脚本，不要太多抽象。",
+    "expected": "默认 1 个业务 class、少量主要方法，不生成 helper/client/service/factory/utils。"
+  }
+]
